@@ -20,6 +20,7 @@ jobs:
 
     steps:
 
+    #create new resource group
     - task: AzureCLI@2
       displayName: Create Resource Group
       inputs:
@@ -39,6 +40,7 @@ jobs:
           env: ${{ parameters.env }}
     
     steps:
+    #create automation account
     - task: AzureCLI@2
       displayName: 'Create Automation Account'
       inputs:
@@ -48,7 +50,8 @@ jobs:
         inlineScript: |
           # Create the Automation Account
           az automation account create --resource-group $(resourceGroupName) --name $(automationAccountName) --location $(location)
-
+    
+    #create runbook
     - task: AzureCLI@2
       displayName: 'Create Runbook'
       inputs:
@@ -58,7 +61,8 @@ jobs:
         inlineScript: |
           # Create the runbook
           az automation runbook create --resource-group $(resourceGroupName) --automation-account-name $(automationAccountName) --name $(runbookName) --type PowerShell --description "$(runbookDescription)" 
-
+    
+    #run powershell script on runbook
     - task: AzurePowerShell@5
       inputs:
         azureSubscription: ${{ parameters.servConn }}
