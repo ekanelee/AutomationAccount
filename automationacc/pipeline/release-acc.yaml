@@ -1,0 +1,11 @@
+name: Deploy Automation account
+
+trigger: none
+
+stages:
+- stage: Dev
+  jobs:
+    - template: job/release-acc-template.yaml
+      parameters:
+        env: 'dev'
+        servConn: ag-srv-cnx
