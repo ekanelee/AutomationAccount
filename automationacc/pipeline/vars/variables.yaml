@@ -1,0 +1,12 @@
+parameters:
+- name: env
+  type: string
+  default: dev
+  displayName: Environnment (dev, stg, prd)
+
+variables:
+  system.debug: true
+  vmImageName: 'ubuntu-latest'
+
+  #Add the rest of your variables here
+  
