@@ -1,0 +1,70 @@
+parameters:
+  - name: env
+    type: string
+    displayName: Environment (dev, stg, prd)
+  - name: servConn
+    type: string
+    displayName: Connection
+
+jobs:
+  - job: ${{ parameters.env }}
+    displayName: Automation ${{ parameters.env }} Deployment
+    pool:
+      vmImage: $(vmImageName)
+    variables:
+      - template: ../vars/variables.yaml
+        parameters:
+          env: ${{ parameters.env }}
+      - name: system.debug
+        value: true
+
+    steps:
+
+    - task: AzureCLI@2
+      displayName: Create Resource Group
+      inputs:
+        azureSubscription: ${{ parameters.servConn }}
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: az group create --name "$(resourceGroupName)" --location "$(location)"
+
+  - job: Deployautoacc
+    dependsOn: ${{ parameters.env }}
+    displayName:  Automation ${{ parameters.env }} Deployment
+    pool:
+      vmImage: $(vmImageName)
+    variables:
+      - template: ../vars/variables.yaml
+        parameters:
+          env: ${{ parameters.env }}
+    
+    steps:
+    - task: AzureCLI@2
+      displayName: 'Create Automation Account'
+      inputs:
+        azureSubscription: ${{ parameters.servConn }}
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          # Create the Automation Account
+          az automation account create --resource-group $(resourceGroupName) --name $(automationAccountName) --location $(location)
+
+    - task: AzureCLI@2
+      displayName: 'Create Runbook'
+      inputs:
+        azureSubscription: ${{ parameters.servConn }}
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          # Create the runbook
+          az automation runbook create --resource-group $(resourceGroupName) --automation-account-name $(automationAccountName) --name $(runbookName) --type PowerShell --description "$(runbookDescription)" 
+
+    - task: AzurePowerShell@5
+      inputs:
+        azureSubscription: ${{ parameters.servConn }}
+        ErrorActionPreference: 'Stop'
+        FailOnStandardError: true
+        ScriptType: 'FilePath'
+        ScriptPath: './automation/pipelines/script/Powershellrunbk.ps1'
+        azurePowerShellVersion: 'LatestVersion'
+      displayName: Start runbook and Test powershell script
