@@ -8,4 +8,4 @@ stages:
     - template: job/release-acc-template.yaml
       parameters:
         env: 'dev'
-        servConn: ag-srv-cnx
+        servConn: #your server connection
